@@ -26,9 +26,10 @@
 #include <fcntl.h>
 #include <SDL2/SDL.h>
 
-#define XRES 512
-#define YRES 512
-#define BPP  32
+#define DEFAULT_WIDTH 512
+#define SCROLL_LINES 50
+#define PIXEL_BITS  32
+#define PIXEL_BYTES  (PIXEL_BITS / 8)
 
 static inline long imin(long x, long y)
 {
@@ -37,6 +38,8 @@ static inline long imin(long x, long y)
 
 static void draw_mem(uint32_t* mem, SDL_Surface* surf, int64_t* loff, size_t len)
 {
+    size_t pixlen = len / PIXEL_BYTES;
+
     if (loff == NULL)
         return;
 
@@ -45,8 +48,8 @@ static void draw_mem(uint32_t* mem, SDL_Surface* surf, int64_t* loff, size_t len
 
     /* we're about to copy past the end...can we not? */
 
-    if (*loff > ((len / (BPP / 8) - (surf->w * surf->h))))
-        *loff = ((len / (BPP / 8) - (surf->w * surf->h)));
+    if (*loff > (pixlen - (surf->w * surf->h)))
+        *loff = (pixlen - (surf->w * surf->h));
 
     /* possibly the world's ugliest memcpy.    *
      *                                         *
@@ -61,14 +64,14 @@ static void draw_mem(uint32_t* mem, SDL_Surface* surf, int64_t* loff, size_t len
 
     memcpy(surf->pixels,
            (mem + *loff),
-           imin(((surf->w * surf->h) * (BPP / 8)), (len - (*loff * (BPP / 8)))));
+           imin(((surf->w * surf->h) * PIXEL_BYTES), (len - (*loff * PIXEL_BYTES))));
 }
 
 int main(int argc, char** argv, char** envp)
 {
     int cont = 1;
 
-    int w = XRES,
+    int w = DEFAULT_WIDTH,
         h = w;
 
     int fd = 0;
@@ -107,7 +110,7 @@ int main(int argc, char** argv, char** envp)
     fseek(file, 0, SEEK_END);
     len = (size_t) ftell(file);
 
-    pixlen = len / (BPP / 8);
+    pixlen = len / PIXEL_BYTES;
 
     /* if there's too little data to show in the window, *
      *  adjust height to fit, preserving width           */
@@ -190,6 +193,8 @@ int main(int argc, char** argv, char** envp)
 
                         if (pixlen < (wsurf->w * wsurf->h))
                         {
+                            /* artificially resize window to fit again */
+
                             SDL_SetWindowSize(wind, wsurf->w, (pixlen / wsurf->w));
 
                             /* reacquiring window surface after artificial resize. *
@@ -218,7 +223,7 @@ int main(int argc, char** argv, char** envp)
                 } break;
                 case SDL_MOUSEWHEEL:
                 {
-                    loff -= (ev.wheel.y * wsurf->w) * 50;
+                    loff -= (ev.wheel.y * wsurf->w) * SCROLL_LINES;
 
                     draw_mem(mem, wsurf, &loff, len);
 
