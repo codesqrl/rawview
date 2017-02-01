@@ -174,7 +174,7 @@ int main(int argc, char** argv, char** envp)
                         case SDLK_PAGEUP: loff -= (wsurf->w * wsurf->h); break;
                         case SDLK_PAGEDOWN: loff += (wsurf->w * wsurf->h); break;
                         case SDLK_HOME: loff = 0; break;
-                        case SDLK_END: loff = pixlen - (wsurf->w * wsurf->h);
+                        case SDLK_END: loff = pixlen - (wsurf->w * wsurf->h); break;
                         case SDLK_SPACE: savedloff = loff; break;
                         case SDLK_RETURN: loff = savedloff; break;
                         default: break;
