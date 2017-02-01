@@ -2,9 +2,9 @@
 
 A simple SDL-based raw data visualizer.
 
-Usage: ./rawview <filename> [w] [h]
+Usage: ./rawview \<filename\> [w] [h]
 
-where <filename> is any readable, seekable file.
+where \<filename\> is any readable, seekable file.
 
 The arrow keys will "nudge" the view by one pixel in the corresponding direction.
 
