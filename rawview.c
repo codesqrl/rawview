@@ -55,7 +55,7 @@ static void draw_scrollbar(SDL_Surface* surf, int64_t loff, size_t len)
 {
     int progress = (int) ((double) surf->h * ((double) (loff * PIXEL_BYTES) / (double) len));
     int y, x;
-    int width = 16;
+    int width = SCROLL_WIDTH;
 
     for (y = 0; y < surf->h; y++)
     {
