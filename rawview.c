@@ -59,7 +59,7 @@ static void draw_scrollbar(SDL_Surface* surf, int64_t loff, size_t len)
 
     for (y = 0; y < surf->h; y++)
     {
-        if (y > progress - SCROLL_WIDTH && y < progress + SCROLL_WIDTH)
+        if (y > progress - width && y < progress + width)
         {
             for (x = surf->w - width; x < surf->w; x++)
             {
@@ -270,7 +270,7 @@ int main(int argc, char** argv, char** envp)
                         else
                         {
                             scrolling = 1;
-                            loff = (uint64_t)(((double)y / (double)wsurf->h) * (len / PIXEL_BYTES / wsurf->w - wsurf->h)) * wsurf->w;
+                            loff = (uint64_t)(((double)y / (double)wsurf->h) * (pixlen / wsurf->w - wsurf->h)) * wsurf->w;
                         }
                         draw_mem(mem, wsurf, &loff, len);
                         SDL_UpdateWindowSurface(wind);
