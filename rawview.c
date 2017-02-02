@@ -53,7 +53,7 @@ uint32_t get_pixel(SDL_Surface *surf, int x, int y)
 
 static void draw_scrollbar(SDL_Surface* surf, int64_t loff, size_t len)
 {
-    int progress = (int) ((double) surf->h * ((double) (loff * PIXEL_BYTES) / (double) len));
+    int progress = (int) ((double) surf->h * (double) (loff / surf->w) / (double) (len / PIXEL_BYTES / surf->w - surf->h));
     int y, x;
     int width = SCROLL_WIDTH;
 
@@ -71,7 +71,7 @@ static void draw_scrollbar(SDL_Surface* surf, int64_t loff, size_t len)
             for (x = surf->w - width; x < surf->w; x++)
             {
                 uint32_t pixel = get_pixel(surf, x, y);
-                uint32_t a = (pixel & 0xFF000000) & 0xFF000000;
+                uint32_t a = pixel & 0xFF000000;
                 uint32_t b = ((pixel & 0x00FF0000) >> 1) & 0x00FF0000;
                 uint32_t g = ((pixel & 0x0000FF00) >> 1) & 0x0000FF00;
                 uint32_t r = ((pixel & 0x000000FF) >> 1) & 0x000000FF;
@@ -270,7 +270,7 @@ int main(int argc, char** argv, char** envp)
                         else
                         {
                             scrolling = 1;
-                            loff = (uint64_t)((double)y / (double)wsurf->h * (double)len / (double)PIXEL_BYTES);
+                            loff = (uint64_t)(((double)y / (double)wsurf->h) * (len / PIXEL_BYTES / wsurf->w - wsurf->h)) * wsurf->w;
                         }
                         draw_mem(mem, wsurf, &loff, len);
                         SDL_UpdateWindowSurface(wind);
