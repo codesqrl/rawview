@@ -36,6 +36,49 @@ static inline long imin(long x, long y)
     return x < y ? x : y;
 }
 
+void set_pixel(SDL_Surface *surf, int x, int y, uint32_t pixel)
+{
+  uint32_t* target_pixel = (uint32_t*) ((uint8_t*) surf->pixels + y * surf->pitch +
+                                                                  x * sizeof(*target_pixel));
+  *target_pixel = pixel;
+}
+
+uint32_t get_pixel(SDL_Surface *surf, int x, int y)
+{
+  uint32_t* target_pixel = (uint32_t*) ((uint8_t*) surf->pixels + y * surf->pitch +
+                                                                  x * sizeof(*target_pixel));
+  return *target_pixel;
+}
+
+static void draw_scrollbar(SDL_Surface* surf, int64_t loff, size_t len)
+{
+    int progress = (int) ((double) surf->h * ((double) (loff * PIXEL_BYTES) / (double) len));
+    int y, x;
+    int width = 16;
+    for (y = 0; y < surf->h; y++)
+    {
+        if (y > progress - 20 && y < progress + 20)
+        {
+            for (x = surf->w - width; x < surf->w; x++)
+            {
+                set_pixel(surf, x, y, 0xFFFFFFFF);
+            }
+        }
+        else
+        {
+            for (x = surf->w - width; x < surf->w; x++)
+            {
+                uint32_t pixel = get_pixel(surf, x, y);
+                uint32_t a = (pixel & 0xFF000000) & 0xFF000000;
+                uint32_t b = ((pixel & 0x00FF0000) >> 1) & 0x00FF0000;
+                uint32_t g = ((pixel & 0x0000FF00) >> 1) & 0x0000FF00;
+                uint32_t r = ((pixel & 0x000000FF) >> 1) & 0x000000FF;
+                set_pixel(surf, x, y, a | b | g | r);
+            }
+        }
+    }
+}
+
 static void draw_mem(uint32_t* mem, SDL_Surface* surf, int64_t* loff, size_t len)
 {
     size_t pixlen = len / PIXEL_BYTES;
@@ -65,6 +108,7 @@ static void draw_mem(uint32_t* mem, SDL_Surface* surf, int64_t* loff, size_t len
     memcpy(surf->pixels,
            (mem + *loff),
            imin(((surf->w * surf->h) * PIXEL_BYTES), (len - (*loff * PIXEL_BYTES))));
+    draw_scrollbar(surf, *loff, len);
 }
 
 int main(int argc, char** argv, char** envp)
@@ -148,6 +192,8 @@ int main(int argc, char** argv, char** envp)
         return 1;
     }
 
+    int scrolling = 0;
+
     draw_mem(mem, wsurf, &loff, len);
 
     SDL_UpdateWindowSurface(wind);
@@ -214,12 +260,20 @@ int main(int argc, char** argv, char** envp)
                 {
                     if (ev.motion.state & SDL_BUTTON_LMASK)
                     {
-                        loff -= (ev.motion.yrel * wsurf->w) + ev.motion.xrel;
-
+                        int x, y;
+                        SDL_GetMouseState(&x, &y);
+                        if (x < wsurf->w - 20 && !scrolling)
+                            loff -= (ev.motion.yrel * wsurf->w) + ev.motion.xrel;
+                        else
+                        {
+                            scrolling = 1;
+                            loff = (uint64_t)((double)y / (double)wsurf->h * (double)len / (double)PIXEL_BYTES);
+                        }
                         draw_mem(mem, wsurf, &loff, len);
-
                         SDL_UpdateWindowSurface(wind);
                     }
+                    else
+                        scrolling = 0;                    
                 } break;
                 case SDL_MOUSEWHEEL:
                 {
