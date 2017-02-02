@@ -28,6 +28,7 @@
 
 #define DEFAULT_WIDTH 512
 #define SCROLL_LINES 50
+#define SCROLL_WIDTH 16
 #define PIXEL_BITS  32
 #define PIXEL_BYTES  (PIXEL_BITS / 8)
 
@@ -55,9 +56,10 @@ static void draw_scrollbar(SDL_Surface* surf, int64_t loff, size_t len)
     int progress = (int) ((double) surf->h * ((double) (loff * PIXEL_BYTES) / (double) len));
     int y, x;
     int width = 16;
+
     for (y = 0; y < surf->h; y++)
     {
-        if (y > progress - 20 && y < progress + 20)
+        if (y > progress - SCROLL_WIDTH && y < progress + SCROLL_WIDTH)
         {
             for (x = surf->w - width; x < surf->w; x++)
             {
@@ -108,6 +110,7 @@ static void draw_mem(uint32_t* mem, SDL_Surface* surf, int64_t* loff, size_t len
     memcpy(surf->pixels,
            (mem + *loff),
            imin(((surf->w * surf->h) * PIXEL_BYTES), (len - (*loff * PIXEL_BYTES))));
+
     draw_scrollbar(surf, *loff, len);
 }
 
@@ -262,7 +265,7 @@ int main(int argc, char** argv, char** envp)
                     {
                         int x, y;
                         SDL_GetMouseState(&x, &y);
-                        if (x < wsurf->w - 20 && !scrolling)
+                        if (x < wsurf->w - SCROLL_WIDTH && !scrolling)
                             loff -= (ev.motion.yrel * wsurf->w) + ev.motion.xrel;
                         else
                         {
@@ -273,7 +276,7 @@ int main(int argc, char** argv, char** envp)
                         SDL_UpdateWindowSurface(wind);
                     }
                     else
-                        scrolling = 0;                    
+                        scrolling = 0;
                 } break;
                 case SDL_MOUSEWHEEL:
                 {
