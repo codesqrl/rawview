@@ -96,22 +96,12 @@ static void draw_mem(uint32_t* mem, SDL_Surface* surf, int64_t* loff, size_t len
     if (*loff > (pixlen - (surf->w * surf->h)))
         *loff = (pixlen - (surf->w * surf->h));
 
-    /* possibly the world's ugliest memcpy.    *
-     *                                         *
-     * the gotcha here is pointer arithmetic;  *
-     * 'loff' is the offset in *pixels*, but   *
-     * memcpy works in *bytes*. the 2nd arg    *
-     * specifies the amount of offset into the *
-     * mapped memory region in uint32_t's, but *
-     * the last arg needs to be a length in    *
-     * bytes, so we need to multiply by the    *
-     * pixel width.                            */
-
     memcpy(surf->pixels,
            (mem + *loff),
            imin(((surf->w * surf->h) * PIXEL_BYTES), (len - (*loff * PIXEL_BYTES))));
 
-    draw_scrollbar(surf, *loff, len);
+    if (len > (surf->w * surf->h))
+        draw_scrollbar(surf, *loff, len);
 }
 
 int main(int argc, char** argv, char** envp)
